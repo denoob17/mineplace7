@@ -5,7 +5,7 @@ from models import db, User, Pixel
 from datetime import datetime, timedelta
 import os
 
-COOLDOWN_SECONDS = 1 
+COOLDOWN_SECONDS = 0
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mineplace-secret-key'
