@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>MinePlace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: 'VT323', monospace;
+            color: #fff;
+        }
+
+        #toolbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 52px;
+            background: #111;
+            border-bottom: 2px solid #222;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        #logo {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            color: #ff4444;
+            text-shadow: 0 0 10px rgba(255,68,68,0.5);
+            white-space: nowrap;
+        }
+
+        .sep { color: #333; font-size: 24px; }
+
+        #colorPicker {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #444;
+            cursor: pointer;
+            background: none;
+            padding: 2px;
+        }
+
+        #colorPicker:hover { border-color: #fff; }
+
+        .palette {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #333;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+
+        .swatch:hover, .swatch.active { border-color: #fff; transform: scale(1.2); }
+
+        #eraser {
+            background: #222;
+            border: 2px solid #444;
+            color: #aaa;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        #eraser:hover, #eraser.active { border-color: #fff; color: #fff; }
+
+        .spacer { flex: 1; }
+
+        #user-info {
+            font-size: 18px;
+            color: #666;
+        }
+
+        #user-info span { color: #ff4444; }
+
+        .nav-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #aaa;
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            padding: 4px 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .nav-btn:hover { border-color: #666; color: #fff; }
+
+        #canvas-wrap {
+            position: fixed;
+            top: 52px; left: 0; right: 0; bottom: 0;
+            overflow: auto;
+            cursor: crosshair;
+        }
+
+        canvas { display: block; }
+
+        #tooltip {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 1px solid #333;
+            color: #666;
+            font-size: 16px;
+            padding: 6px 16px;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        #cooldown {
+            font-size: 20px;
+            color: #ff4444;
+            min-width: 80px;
+            display: none;
+        }
+
+        #cooldown.active { display: block; }
+
+         #online {
+             display: flex;
+             align-items: center;
+             gap: 6px;
+             font-size: 18px;
+             color: #555;
+            }
+
+        #dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #44ff88;
+            box-shadow: 0 0 8px #44ff88;
+            animation: pulse 2s infinite;
+        }
+       
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toolbar">
+    <span id="logo">MINE PLACE</span>
+    <span class="sep">|</span>
+
+    <input type="color" id="colorPicker" value="#ff0000" title="Выбрать цвет">
+
+    <div class="palette" id="palette"></div>
+
+    <button id="eraser">✕ ластик</button>
+
+    <span class="sep">|</span>
+
+    <span id="cooldown"></span>
+
+    <div id="online">
+        <div id="dot"></div>
+        <span id="online-count">онлайн</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div id="user-info">👤 <span>{{ username }}</span></div>
+    <a href="/admin" class="nav-btn" id="admin-btn" style="display:none">⚙ admin</a>
+    <a href="/logout" class="nav-btn">выйти</a>
+</div>
+
+<div id="canvas-wrap">
+    <canvas id="myCanvas"></canvas>
+</div>
+
+<div id="tooltip">Загрузка холста...</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const canvas = document.getElementById('myCanvas')
+const ctx = canvas.getContext('2d')
+const tooltip = document.getElementById('tooltip')
+
+const PIXEL_SIZE = 15
+const COLS = 120
+const ROWS = 60
+
+canvas.width = COLS * PIXEL_SIZE
+canvas.height = ROWS * PIXEL_SIZE
+
+let grid = []
+for (let y = 0; y < ROWS; y++) grid.push(new Array(COLS).fill('#1a1a1a'))
+
+function drawGrid() {
+    for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+            ctx.fillStyle = grid[y][x]
+            ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE)
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+            ctx.strokeRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE)
+        }
+    }
+}
+
+function drawPixel(x, y) {
+    ctx.fillStyle = grid[y][x]
+    ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE)
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)'
+    ctx.strokeRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE)
+}
+
+// Палитра
+const COLORS = ['#ff4444','#ff8800','#ffdd00','#44ff88','#00aaff','#aa44ff','#ff44aa','#ffffff','#888888','#222222']
+const palette = document.getElementById('palette')
+COLORS.forEach(c => {
+    const sw = document.createElement('div')
+    sw.className = 'swatch'
+    sw.style.background = c
+    sw.title = c
+    sw.addEventListener('click', () => {
+        selectedColor = c
+        colorPicker.value = c
+        eraserMode = false
+        eraser.classList.remove('active')
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'))
+        sw.classList.add('active')
+    })
+    palette.appendChild(sw)
+})
+
+// Цвет
+const colorPicker = document.getElementById('colorPicker')
+let selectedColor = localStorage.getItem('color') || '#ff0000'
+colorPicker.value = selectedColor
+
+colorPicker.addEventListener('input', () => {
+    selectedColor = colorPicker.value
+    localStorage.setItem('color', selectedColor)
+    eraserMode = false
+    eraser.classList.remove('active')
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'))
+})
+
+// Ластик
+const eraser = document.getElementById('eraser')
+let eraserMode = false
+eraser.addEventListener('click', () => {
+    eraserMode = !eraserMode
+    eraser.classList.toggle('active', eraserMode)
+})
+
+// WebSocket
+const socket = io()
+
+socket.on('connect', () => {
+    tooltip.textContent = 'Нажми на клетку чтобы нарисовать пиксель'
+})
+
+socket.on('draw', data => {
+    if (data.y < ROWS && data.x < COLS) {
+        grid[data.y][data.x] = data.color
+        drawPixel(data.x, data.y)
+    }
+})
+
+socket.on('canvas_cleared', () => {
+    for (let y = 0; y < ROWS; y++) grid[y].fill('#1a1a1a')
+    drawGrid()
+})
+
+const COOLDOWN_MS = 1000
+let lastPixelTime = 0
+let cooldownInterval = null
+const cooldownEl = document.getElementById('cooldown')
+
+{% if is_admin %}
+document.getElementById('admin-btn').style.display = 'block'
+{% endif %}
+
+function startCooldown() {
+    lastPixelTime = Date.now()
+    if (cooldownInterval) clearInterval(cooldownInterval)
+    cooldownInterval = setInterval(() => {
+        const remaining = Math.ceil((COOLDOWN_MS - (Date.now() - lastPixelTime)) / 1000)
+        if (remaining <= 0) {
+            clearInterval(cooldownInterval)
+            cooldownEl.textContent = ''
+        } else {
+            cooldownEl.textContent = `⏳ ${remaining}с`
+        }
+    }, 100)
+}
+
+function canDraw() {
+    return Date.now() - lastPixelTime >= COOLDOWN_MS
+}
+
+// Клик по холсту — только одиночный клик, без зажатой мыши
+canvas.addEventListener('mousemove', e => {
+    const x = Math.floor(e.offsetX / PIXEL_SIZE)
+    const y = Math.floor(e.offsetY / PIXEL_SIZE)
+    tooltip.textContent = `x: ${x}, y: ${y}`
+})
+
+canvas.addEventListener('click', e => {
+    const x = Math.floor(e.offsetX / PIXEL_SIZE)
+    const y = Math.floor(e.offsetY / PIXEL_SIZE)
+    placePixel(x, y)
+})
+
+function placePixel(x, y) {
+    if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return
+    if (!canDraw()) return  // блокируем если cooldown не истёк
+
+    const prevColor = grid[y][x]
+    const color = eraserMode ? '#1a1a1a' : selectedColor
+    grid[y][x] = color
+    drawPixel(x, y)
+
+    const data = { x, y, color }
+    socket.emit('draw', data)
+
+    fetch('/api/pixel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(r => {
+        if (r.status === 429) {
+            // Сервер отказал — откатываем пиксель
+            grid[y][x] = prevColor
+            drawPixel(x, y)
+        } else {
+            startCooldown()
+        }
+    })
+}
+
+// Загрузка холста
+fetch('/api/canvas')
+    .then(r => r.json())
+    .then(pixels => {
+        pixels.forEach(p => {
+            if (p.y < ROWS && p.x < COLS) grid[p.y][p.x] = p.color
+        })
+        drawGrid()
+        tooltip.textContent = 'Нажми на клетку чтобы нарисовать пиксель'
+    })
+</script>
+</body>
+</html>

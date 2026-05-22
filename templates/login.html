@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>MinePlace — Вход</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'VT323', monospace;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px);
+        }
+
+        .box {
+            background: #111;
+            border: 2px solid #ff4444;
+            padding: 48px 40px;
+            width: 360px;
+            box-shadow: 0 0 40px rgba(255,68,68,0.2), inset 0 0 40px rgba(0,0,0,0.5);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            color: #ff4444;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(255,68,68,0.6);
+        }
+
+        .subtitle {
+            color: #555;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 36px;
+        }
+
+        label {
+            display: block;
+            color: #888;
+            font-size: 18px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #ff4444;
+            box-shadow: 0 0 10px rgba(255,68,68,0.2);
+        }
+
+        button {
+            width: 100%;
+            background: #ff4444;
+            color: #000;
+            border: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 4px;
+        }
+
+        button:hover { background: #ff6666; }
+        button:active { transform: scale(0.98); }
+
+        .error {
+            background: rgba(255,68,68,0.1);
+            border: 1px solid #ff4444;
+            color: #ff8888;
+            font-size: 18px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 24px;
+            color: #555;
+            font-size: 18px;
+        }
+
+        .link a {
+            color: #ff4444;
+            text-decoration: none;
+        }
+
+        .link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>MINE PLACE</h1>
+        <p class="subtitle">// вход в систему</p>
+
+        {% if error %}
+        <div class="error">⚠ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <label>Логин</label>
+            <input type="text" name="username" autocomplete="off" required>
+
+            <label>Пароль</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">[ ВОЙТИ ]</button>
+        </form>
+
+        <div class="link">
+            Нет аккаунта? <a href="/register">Регистрация</a>
+        </div>
+    </div>
+</body>
+</html>

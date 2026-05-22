@@ -1,0 +1,20 @@
+
+from app import app, db
+from models import User
+
+ADMIN_USERNAME = 'den'   
+ADMIN_PASSWORD = 'den123'  
+
+with app.app_context():
+    db.create_all()
+    existing = User.query.filter_by(username=ADMIN_USERNAME).first()
+    if existing:
+        existing.is_admin = True
+        db.session.commit()
+        print(f'✅ Пользователь "{ADMIN_USERNAME}" теперь админ!')
+    else:
+        user = User(username=ADMIN_USERNAME, is_admin=True)
+        user.set_password(ADMIN_PASSWORD)
+        db.session.add(user)
+        db.session.commit()
+        print(f'✅ Создан админ: {ADMIN_USERNAME} / {ADMIN_PASSWORD}')

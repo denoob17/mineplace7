@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>MinePlace — Регистрация</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'VT323', monospace;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px),
+                repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px);
+        }
+
+        .box {
+            background: #111;
+            border: 2px solid #44aaff;
+            padding: 48px 40px;
+            width: 360px;
+            box-shadow: 0 0 40px rgba(68,170,255,0.15), inset 0 0 40px rgba(0,0,0,0.5);
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            color: #44aaff;
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(68,170,255,0.5);
+        }
+
+        .subtitle {
+            color: #555;
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 36px;
+        }
+
+        label {
+            display: block;
+            color: #888;
+            font-size: 18px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #44aaff;
+            box-shadow: 0 0 10px rgba(68,170,255,0.15);
+        }
+
+        button {
+            width: 100%;
+            background: #44aaff;
+            color: #000;
+            border: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover { background: #66bbff; }
+        button:active { transform: scale(0.98); }
+
+        .error {
+            background: rgba(255,68,68,0.1);
+            border: 1px solid #ff4444;
+            color: #ff8888;
+            font-size: 18px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 24px;
+            color: #555;
+            font-size: 18px;
+        }
+
+        .link a { color: #44aaff; text-decoration: none; }
+        .link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>MINE PLACE</h1>
+        <p class="subtitle">// новый игрок</p>
+
+        {% if error %}
+        <div class="error">⚠ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <label>Логин</label>
+            <input type="text" name="username" autocomplete="off" required>
+
+            <label>Пароль</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">[ СОЗДАТЬ АККАУНТ ]</button>
+        </form>
+
+        <div class="link">
+            Уже есть аккаунт? <a href="/login">Войти</a>
+        </div>
+    </div>
+</body>
+</html>
