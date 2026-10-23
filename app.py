@@ -8,7 +8,7 @@ import os
 COOLDOWN_SECONDS = 0
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'mineplace-secret-key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///canvas.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
